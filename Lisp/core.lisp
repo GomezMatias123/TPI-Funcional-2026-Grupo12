@@ -310,3 +310,39 @@ restarts (invokable by number or by possibly-abbreviated name):
 	;->(ciclos-Por-Minuto -5)
 	; -2 ;
 	; 132
+
+	;; Casos de prueba Requerimiento 4
+	#|
+;;
+(duracion-Ciclo 0)
+216
+* ;; Esperado: 216
+(duracion-Ciclo 100)
+216
+* ;; [Normal]
+(duracion-Ciclo 0)
+216
+* (duracion-Ciclo 100)
+216
+*
+
+0] ;; [Error] (Intentar calcular con un símbolo en lugar de número)
+(duracion-Ciclo 'rojo)
+
+
+debugger invoked on a TYPE-ERROR @10002743C2 in thread
+#<THREAD tid=6456 "main thread" RUNNING {1100C38003}>:
+  The value
+    ROJO
+  is not of type
+    REAL
+
+Type HELP for debugger help, or (SB-EXT:EXIT) to exit from SBCL.
+
+restarts (invokable by number or by possibly-abbreviated name):
+  0: [ABORT] Reduce debugger level (to debug level 1).
+  1:         Exit debugger, returning to top level.
+
+(FLOOR ROJO 216)
+0[2]
+|#
