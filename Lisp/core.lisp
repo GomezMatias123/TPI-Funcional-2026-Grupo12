@@ -13,13 +13,13 @@
 	(cond 
 		((and (equal colorActual 'en-rojo) (equal cambiarA 'amarillo))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
 		((and (equal colorActual 'en-amarillo) (equal cambiarA 'verde))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
-		((and (equal colorActual 'en-verde) (equal cambiarA 'rojo))  (list colorActual (format nil "'Cambiar-a-~a" cambiarA)))
+		((and (equal colorActual 'en-verde) (equal cambiarA 'rojo))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
 		(t (list colorActual 'accion-por-defecto))
 		)
 	)
 
 ;; ========================================================
-;; FUNCIÓN: timer
+;; FUNCIÓN: semaforo-timer
 ;; NATURALEZA: Pura (no posee efectos secundarios, devuelve el valor esperado de la funcion auxiliar a la que llama)
 ;; ESTRATEGIA: Es una funciones que prepara las variables para ser evaluadas en la funcion que se llama dentro de esta 
 ;; misma, la procedemos a clasificar como una funcion iniciadora/preparadora, utiliza funciones de orden superior (reduce y mapcar) para lograr
@@ -28,19 +28,19 @@
 ;; IMPACTO: Es una funcion no destructiva.
 ;; ========================================================
 
-(defun timer (n)
+(defun semaforo-timer (n)
 	(let ((duraciones '((rojo 90) (amarillo 6) (verde 120))))
 				(timerAux (mod n (reduce '+ (mapcar 'cadr duraciones))) duraciones)
 	)
 )
 
 ;; ========================================================
-;; FUNCIÓN: timerAux
+;; FUNCIÓN: semaforo-timer-aux
 ;; NATURALEZA: Pura (Devuelve los mismos valores esperados segun las condiciones que se analizan en n
 ;; junto con el parametro lista que se le envia)
-;; ESTRATEGIA: Recursividad de cola (la llamada recursiva es la ultima operacion) - recorre la lista de duraciones y se compara el elemento numerico con el entero "n"
-;; pasado como parametro, si el entero "n" es menor se encontro el color de esa posicion de tiempo, caso contrario de n > "al elemento
-;; numerico de la lista duraciones" se procede a seguir recorriendo la lista repitiendo el proceso hasta que "n es menor" devuelva verdadero.
+;; ESTRATEGIA: Recursividad de cola (la llamada recursiva es la ultima operacion) - recorre la lista de duraciones
+;; y compara el entero "n" con la duracion del color actual; si n < duracion, retorna ese color.
+;; Si no, descuenta la duracion y se llama a si misma con el resto de la lista (tail call).
 ;; IMPACTO: Es una funcion no destructiva.
 ;; ========================================================
 
@@ -138,9 +138,44 @@
 )
 
 ;; ========================================================
-;; FUNCIÓN:  
-;; NATURALEZA: 
-;; ESTRATEGIA: 
-;; IMPACTO: 
+;; FUNCIÓN: contar-Color
+;; NATURALEZA: Pura (devuelve un valor numérico sin efectos secundarios).
+;; ESTRATEGIA: Recursividad de cola con acumulador — recorre cada segundo del
+;; intervalo (segundo, fin) incrementa el acumulador cuando semaforo-timer
+;; devuelve el color. La llamada recursiva es siempre la última
+;; operación en cada rama, garantizando tail call.
+;; IMPACTO: No destructivo.
 ;; ========================================================
 
+(defun contar-color(color segundo fin acum)
+
+	(cond
+		((>= segundo fin) acum)
+		((equal (semaforo-timer segundo) color))
+		(contar-Color color (+ segundo 1) fin (+ acum 1))
+		(t (contar-Color color (+ segundo 1) fin acum))
+	)
+)
+
+;; ========================================================
+;; FUNCIÓN: distribucion-Temporal
+;; NATURALEZA: Pura — calcula porcentajes basándose únicamente en funciones
+;; puras auxiliares (semaforo-timer vía contar-Color). No produce efectos
+;; secundarios ni depende de estado externo.
+;; ESTRATEGIA: Utiliza funciones de orden superior (mapcar con lambda) para
+;; calcular declarativamente el conteo de segundos de cada color dentro de
+;; 1 hora (3600 segundos); luego un segundo mapcar transforma esos conteos
+;; en porcentajes con precisión flotante.
+;; IMPACTO: No destructivo.
+;; ========================================================
+
+(defun distribucion-Temporal ()
+	(let* ((total-segundos 3600)
+		   (colores '(rojo amarillo verde))
+		   (conteos (mapcar (lambda (color)
+								(contar-color color 0 total-segundos 0))
+							colores)))
+		(mapcar (lambda (color conteo)
+					(list color (float (* (/ conteo total-segundos) 100))))
+				colores conteos))
+)
