@@ -18,22 +18,6 @@
 		)
 	)
 
-;;casos de prueba
-
-;;funcionamiento normal
-;;-> (transicion 'en-rojo 'amarillo)
-
-#|(EN-ROJO "Cambiar-a-AMARILLO")|#
-
-;;caminos alternativos (si los hubiere) 
-;;-> (transicion 'en-rojo 'verde)
-
-#|(EN-ROJO ACCION-POR-DEFECTO)|#
-
-;;errores
-;;-> (transicion "en-rojo" 'verde)
-
-#|("en-rojo" ACCION-POR-DEFECTO)|#
 ;; ========================================================
 ;; FUNCIÓN: semaforo-timer
 ;; NATURALEZA: Pura (no posee efectos secundarios, devuelve el valor esperado de la funcion auxiliar a la que llama)
@@ -50,23 +34,6 @@
 	)
 )
 
-;;casos de prueba
-
-;;funcionamiento normal
-;;-> (semaforo-timer  90)
-
-#|AMARILLO|#
-
-;;caminos alternativos (si los hubiere) 
-;;-> (semaforo-timer  444)
-
-#|ROJO|#
-
-;;errores
-;;-> (semaforo-timer  "54")
-
-
-#|MOD: "54" is not a real number|#
 ;; ========================================================
 ;; FUNCIÓN: semaforo-timer-aux
 ;; NATURALEZA: Pura (Devuelve los mismos valores esperados segun las condiciones que se analizan en n
@@ -212,3 +179,77 @@
 					(list color (float (* (/ conteo total-segundos) 100))))
 				colores conteos))
 )
+
+
+;;casos de prueba
+
+;;funcionamiento normal
+;;-> (transicion 'en-rojo 'amarillo)
+
+#|(EN-ROJO "Cambiar-a-AMARILLO")|#
+
+;;caminos alternativos (si los hubiere) 
+;;-> (transicion 'en-rojo 'verde)
+
+#|(EN-ROJO ACCION-POR-DEFECTO)|#
+
+;;errores
+;;-> (transicion "en-rojo" 'verde)
+
+#|("en-rojo" ACCION-POR-DEFECTO)|#
+
+;;casos de prueba
+
+;;funcionamiento normal
+;;-> (semaforo-timer  90)
+
+#|AMARILLO|#
+
+;;caminos alternativos (si los hubiere) 
+;;-> (semaforo-timer  444)
+
+#|ROJO|#
+
+;;errores
+;;-> (semaforo-timer  "54")
+
+
+#|MOD: "54" is not a real number|#
+
+	;; casos de prueba requerimiento 3
+	#|
+* ; [Normal] Registra el cambio con timestamp real del sistema
+(registrarCambiosEstado 'rojo 'amarillo)
+Tiempo 3990373261: la luz ha cambiado de ROJO a AMARILLO
+NIL
+* (registrarCambiosEstado 'amarillo 'verde)
+Tiempo 3990373261: la luz ha cambiado de AMARILLO a VERDE
+NIL
+* (registrarCambiosEstado 'verde 'rojo)
+Tiempo 3990373263: la luz ha cambiado de VERDE a ROJO
+NIL
+* ; [Alternativo] Acepta cualquier simbolo, no valida colores
+(registrarCambiosEstado 'apagado 'rojo)
+Tiempo 3990373316: la luz ha cambiado de APAGADO a ROJO
+NIL
+* ; [Error] Sin argumentos
+(registrarCambiosEstado)
+
+debugger invoked on a SB-INT:SIMPLE-PROGRAM-ERROR @1000B5AF43 in thread
+#<THREAD tid=9888 "main thread" RUNNING {1100C38003}>:
+  invalid number of arguments: 0
+
+Type HELP for debugger help, or (SB-EXT:EXIT) to exit from SBCL.
+
+restarts (invokable by number or by possibly-abbreviated name):
+  0: [REPLACE-FUNCTION] Call a different function with the same arguments
+  1: [CALL-FORM       ] Call a different form
+  2: [ABORT           ] Exit debugger, returning to top level.
+
+(REGISTRARCAMBIOSESTADO) [external]
+   source: (DEFUN REGISTRARCAMBIOSESTADO (COLORANTERIOR SIGUIENTECOLOR)
+             (LET ((EPOCH (GET-UNIVERSAL-TIME)))
+               (FORMAT T "Tiempo ~a: la luz ha cambiado de ~a a ~a" EPOCH
+                       COLORANTERIOR SIGUIENTECOLOR)))
+0]
+|#
