@@ -30,7 +30,7 @@
 
 (defun semaforo-timer (n)
 	(let ((duraciones '((rojo 90) (amarillo 6) (verde 120))))
-				(timerAux (mod n (reduce '+ (mapcar 'cadr duraciones))) duraciones)
+				(semaforo-timer-aux (mod n (reduce '+ (mapcar 'cadr duraciones))) duraciones)
 	)
 )
 
@@ -45,16 +45,16 @@
 ;; ========================================================
 
 
-(defun timerAux (n duraciones)
+(defun semaforo-timer-aux (n duraciones)
 		(cond 	((< n (cadar duraciones)) (caar duraciones))
-				(t (timerAux (- n (cadar duraciones)) (cdr duraciones)))
+				(t (semaforo-timer-aux (- n (cadar duraciones)) (cdr duraciones)))
 				)
 	)
 
 
 
 ;; ========================================================
-;; FUNCIÓN: registrarCambio 
+;; FUNCIÓN: registrarCambiosEstado 
 ;; NATURALEZA: Impura (posee efectos secundarios: imprime el cambio de
 ;; estado en la terminal y consulta la hora del sistema mediante 
 ;; get-universal-time, que depende del estado externo del entorno)
@@ -97,7 +97,7 @@
 
 (defun buscar-Fin-Ciclo(segundos)
 	(cond
-		((and (equal (timer segundos) 'verde) (equal (timer (+ segundos 1)) 'rojo)) 
+		((and (equal (semaforo-timer segundos) 'verde) (equal (semaforo-timer (+ segundos 1)) 'rojo)) 
 			(+ segundos 1))
 		(t (buscar-Fin-Ciclo (+ segundos 1)))
 	)
@@ -147,7 +147,7 @@
 ;; IMPACTO: No destructivo.
 ;; ========================================================
 
-(defun contar-color(color segundo fin acum)
+(defun contar-Color(color segundo fin acum)
 
 	(cond
 		((>= segundo fin) acum)
@@ -198,7 +198,7 @@
 
 #|("en-rojo" ACCION-POR-DEFECTO)|#
 
-;;casos de prueba
+;;casos de prueba requerimiento 2
 
 ;;funcionamiento normal
 ;;-> (semaforo-timer  90)
@@ -311,39 +311,12 @@ restarts (invokable by number or by possibly-abbreviated name):
 	; -2 ;
 	; 132
 
-	;; Casos de prueba Requerimiento 4
-	#|
-;;
-(duracion-Ciclo 0)
-216
-* ;; Esperado: 216
-(duracion-Ciclo 100)
-216
-* ;; [Normal]
-(duracion-Ciclo 0)
-216
-* (duracion-Ciclo 100)
-216
-*
+	;; Casos de prueba Requerimiento 6
 
-0] ;; [Error] (Intentar calcular con un símbolo en lugar de número)
-(duracion-Ciclo 'rojo)
+	; funcionamiento normal
+	; (distribucion-temporal)
+	; ((rojo 41.67) (amarillo 2.78) (verde 55.56)) 
 
-
-debugger invoked on a TYPE-ERROR @10002743C2 in thread
-#<THREAD tid=6456 "main thread" RUNNING {1100C38003}>:
-  The value
-    ROJO
-  is not of type
-    REAL
-
-Type HELP for debugger help, or (SB-EXT:EXIT) to exit from SBCL.
-
-restarts (invokable by number or by possibly-abbreviated name):
-  0: [ABORT] Reduce debugger level (to debug level 1).
-  1:         Exit debugger, returning to top level.
-
-(FLOOR ROJO 216)
-0[2]
-|#
-	; 132
+	;errores
+	; (distribucion-temporal)
+	; ((rojo 33.333332) (amarillo 33.333332) (verde 33.333332))
