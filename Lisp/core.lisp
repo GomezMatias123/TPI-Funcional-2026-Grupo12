@@ -18,6 +18,22 @@
 		)
 	)
 
+;;casos de prueba
+
+;;funcionamiento normal
+;;-> (transicion 'en-rojo 'amarillo)
+
+#|(EN-ROJO "Cambiar-a-AMARILLO")|#
+
+;;caminos alternativos (si los hubiere) 
+;;-> (transicion 'en-rojo 'verde)
+
+#|(EN-ROJO ACCION-POR-DEFECTO)|#
+
+;;errores
+;;-> (transicion "en-rojo" 'verde)
+
+#|("en-rojo" ACCION-POR-DEFECTO)|#
 ;; ========================================================
 ;; FUNCIÓN: semaforo-timer
 ;; NATURALEZA: Pura (no posee efectos secundarios, devuelve el valor esperado de la funcion auxiliar a la que llama)
@@ -34,6 +50,23 @@
 	)
 )
 
+;;casos de prueba
+
+;;funcionamiento normal
+;;-> (semaforo-timer  90)
+
+#|AMARILLO|#
+
+;;caminos alternativos (si los hubiere) 
+;;-> (semaforo-timer  444)
+
+#|ROJO|#
+
+;;errores
+;;-> (semaforo-timer  "54")
+
+
+#|MOD: "54" is not a real number|#
 ;; ========================================================
 ;; FUNCIÓN: semaforo-timer-aux
 ;; NATURALEZA: Pura (Devuelve los mismos valores esperados segun las condiciones que se analizan en n
