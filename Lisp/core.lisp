@@ -253,3 +253,21 @@ restarts (invokable by number or by possibly-abbreviated name):
                        COLORANTERIOR SIGUIENTECOLOR)))
 0]
 |#
+
+
+	;; Casos de prueba Requerimiento 5
+	 
+	;funcionamiento normal
+	;(ciclos-Por-Minuto 5)
+  ; 1 ;
+	; 84
+
+	;caminos alternativos
+	; (ciclos-Por-Minuto 5.2)
+	; 1 ;
+	; 95.99999
+
+	;errores
+	;->(ciclos-Por-Minuto -5)
+	; -2 ;
+	; 132
