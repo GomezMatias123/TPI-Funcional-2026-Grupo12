@@ -1,6 +1,21 @@
 ;;(load "C:\\Lisp\\TPI-Funcional-2026-Grupo12\\TPI-Funcional-2026-Grupo12\\Lisp\\core")
 
 ;; ========================================================
+;; Carga de Quicklisp y dependencias externas
+;; ========================================================
+#-quicklisp
+(let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp"
+                                       (user-homedir-pathname))))
+  (when (probe-file quicklisp-init)
+    (load quicklisp-init)))
+
+(ql:quickload :local-time)
+
+
+
+
+
+;; ========================================================
 ;; FUNCIÓN: transicion
 ;; NATURALEZA: Pura (no posee efectos secundarios, solo crea la lista segun el estado actual y la accion siguiente del ciclo del semaforo)
 ;; ESTRATEGIA: No posee una una estrategia especfica, se trata de una funcion simple que selecciona un resultado en base a la evaluacion 
@@ -63,10 +78,13 @@
 ;; ========================================================
 
 (defun registrarCambiosEstado (colorAnterior siguienteColor)
-	(let ((epoch (get-universal-time)))
-		(format t "Tiempo ~a: la luz ha cambiado de ~a a ~a" epoch colorAnterior siguienteColor)
-		)
-)
+	(format t "Tiempo [~a]: la luz ha cambiado de ~a a ~a~%"
+          (local-time:format-timestring 
+            nil 
+            (local-time:timestamp- (local-time:now) 3 :hour)
+            :format '((:year 4) "-" (:month 2) "-" (:day 2) " "
+                      (:hour 2) ":" (:min 2) ":" (:sec 2)))
+          colorAnterior siguienteColor))
 
 ;; ========================================================
 ;; FUNCIÓN: duracion-Ciclo
