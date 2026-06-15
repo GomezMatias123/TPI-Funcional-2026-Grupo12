@@ -1,4 +1,5 @@
-;;(load "C:\\Lisp\\TPI-Funcional-2026-Grupo12\\TPI-Funcional-2026-Grupo12\\Lisp\\core")
+;;CLIPS-> (load "C:\\Lisp\\TPI-Funcional-2026-Grupo12\\TPI-Funcional-2026-Grupo12\\Lisp\\core")
+;;SBCL-> (load "C:/Lisp/TPI-Funcional-2026-Grupo12/TPI-Funcional-2026-Grupo12/Lisp/core")
 
 ;; ========================================================
 ;; Carga de Quicklisp y dependencias externas
@@ -26,9 +27,12 @@
 (defun transicion (colorActual cambiarA)
 
 	(cond 
-		((and (equal colorActual 'en-rojo) (equal cambiarA 'amarillo))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
-		((and (equal colorActual 'en-amarillo) (equal cambiarA 'verde))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
-		((and (equal colorActual 'en-verde) (equal cambiarA 'rojo))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
+		((and (equal colorActual 'en-rojo) (equal cambiarA 'rojo-intermitente))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
+		((and (equal colorActual 'en-rojo-intermitente) (equal cambiarA 'amarillo))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
+		((and (equal colorActual 'en-amarillo) (equal cambiarA 'amarillo-intermitente))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
+		((and (equal colorActual 'en-amarillo-intermitente) (equal cambiarA 'verde))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
+		((and (equal colorActual 'en-verde) (equal cambiarA 'verde-intermitente))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
+		((and (equal colorActual 'en-verde-intermitente) (equal cambiarA 'rojo))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
 		(t (list colorActual 'accion-por-defecto))
 		)
 	)
@@ -44,7 +48,7 @@
 ;; ========================================================
 
 (defun semaforo-timer (n)
-	(let ((duraciones '((rojo 90) (amarillo 6) (verde 120))))
+	(let ((duraciones '((rojo 90) (rojo-intermitente 3) (amarillo 6) (amarillo-intermitente 3) (verde 120) (verde-intermitente 3))))
 				(semaforo-timer-aux (mod n (reduce '+ (mapcar 'cadr duraciones))) duraciones)
 	)
 )
@@ -70,9 +74,8 @@
 
 ;; ========================================================
 ;; FUNCIÓN: registrarCambiosEstado 
-;; NATURALEZA: Impura (posee efectos secundarios: imprime el cambio de
-;; estado en la terminal y consulta la hora del sistema mediante 
-;; get-universal-time, que depende del estado externo del entorno)
+;; NATURALEZA: Impura (posee efectos secundarios: imprime el cambio de estado en la terminal y consulta la hora del sistema mediante 
+;; local-time:now de la libreria quicklisp
 ;; ESTRATEGIA: No conlleva ninguna estrategia, es una funcion simple que consulta el tiempo actual trancurrido hasta hoy desde los origenes de Lisp.
 ;; IMPACTO: Es una funcion no destructiva, brinda informacion pero no modifica ningun tipo de dato
 ;; ========================================================
@@ -89,7 +92,7 @@
 ;; ========================================================
 ;; FUNCIÓN: duracion-Ciclo
 ;; NATURALEZA: Pura realiza calculos y devuelve un valor numerico que representa el total de segundos de 1 ciclo sin importar el segundo que se le brinde.
-;; Se podria pasar como parametero segundos mayores a 216 que corresponden a un segundo ciclo segun la duraciones del requerimento 2 e igualmente el calculo
+;; Se podria pasar como parametero segundos mayores a 225 que corresponden a un segundo ciclo segun la duraciones del requerimento 2 e igualmente el calculo
 ;; seguiria dando la duracion de 1 ciclo
 ;; ESTRATEGIA: Se trata de una estragia que permite iniciar los valores para ser usados en otras funciones, se utiliza un let para definir el fin del ciclo correspondiente al segundo
 ;; del tiempo del ciclo que pasamos por parametro, luego se vuelve a llamar a la funcion auxiliar buscar-Fin-Ciclo para obtener el final del ciclo del siguiente ciclo para 
@@ -115,7 +118,7 @@
 
 (defun buscar-Fin-Ciclo(segundos)
 	(cond
-		((and (equal (semaforo-timer segundos) 'verde) (equal (semaforo-timer (+ segundos 1)) 'rojo)) 
+		((and (equal (semaforo-timer segundos) 'verde-intermitente) (equal (semaforo-timer (+ segundos 1)) 'rojo)) 
 			(+ segundos 1))
 		(t (buscar-Fin-Ciclo (+ segundos 1)))
 	)
@@ -165,15 +168,12 @@
 ;; IMPACTO: No destructivo.
 ;; ========================================================
 
-(defun contar-Color(color segundo fin acum)
-
-	(cond
-		((>= segundo fin) acum)
-		((equal (semaforo-timer segundo) color))
-		(contar-Color color (+ segundo 1) fin (+ acum 1))
-		(t (contar-Color color (+ segundo 1) fin acum))
-	)
-)
+(defun contar-Color (color segundo fin acum)
+  (cond
+    ((>= segundo fin) acum)
+    ((equal (semaforo-timer segundo) color) 
+     (contar-Color color (+ segundo 1) fin (+ acum 1)))
+    (t (contar-Color color (+ segundo 1) fin acum))))
 
 ;; ========================================================
 ;; FUNCIÓN: distribucion-Temporal
@@ -189,7 +189,7 @@
 
 (defun distribucion-Temporal ()
 	(let* ((total-segundos 3600)
-		   (colores '(rojo amarillo verde))
+		   (colores '(rojo rojo-intermitente amarillo amarillo-intermitente verde verde-intermitente))
 		   (conteos (mapcar (lambda (color)
 								(contar-color color 0 total-segundos 0))
 							colores)))
@@ -198,13 +198,34 @@
 				colores conteos))
 )
 
+;; ========================================================
+;; FUNCIÓN: informe
+;; NATURALEZA: Impura (Escribe en un archivo de texto plano, modificando el estado externo).
+;; ESTRATEGIA: Función de orden superior — utiliza mapc con una lambda para 
+;; recorrer la lista de datos de transiciones y coloca la informacion dentro
+;; de un texto de manera iterada.
+;; IMPACTO: No destructiva
+;; ========================================================
+
+(defun informe (datos)
+  (with-open-file (stream "informe-ejecucion-semaforo.txt" 
+                          :direction :output
+                          :if-exists :supersede)
+    (format stream "Informe de Ejecución del Sistema Semafórico~%")
+    (format stream "=========================================~%")
+    (mapc (lambda (entrada)
+            (format stream "~a - Transición: ~a → ~a~%"
+                    (first entrada) (second entrada) (third entrada)))
+          datos)
+    (format stream "~% --- Fin del Informe ---")))
+
 
 ;;casos de prueba
 
 ;;funcionamiento normal
-;;-> (transicion 'en-rojo 'amarillo)
+;;-> (transicion 'en-rojo 'rojo-intermitente)
 
-#|(EN-ROJO "Cambiar-a-AMARILLO")|#
+#|(EN-ROJO "Cambiar-a-ROJO-INTERMITENTE")|#
 
 ;;caminos alternativos (si los hubiere) 
 ;;-> (transicion 'en-rojo 'verde)
@@ -221,12 +242,12 @@
 ;;funcionamiento normal
 ;;-> (semaforo-timer  90)
 
-#|AMARILLO|#
+#|ROJO-INTERMITENTE|#
 
 ;;caminos alternativos (si los hubiere) 
 ;;-> (semaforo-timer  444)
 
-#|ROJO|#
+#|VERDE|#
 
 ;;errores
 ;;-> (semaforo-timer  "54")
@@ -278,18 +299,12 @@ restarts (invokable by number or by possibly-abbreviated name):
 #|
 ;;
 (duracion-Ciclo 0)
-216
-* ;; Esperado: 216
+225
+* ;; Esperado: 225
 (duracion-Ciclo 100)
-216
-* ;; [Normal]
-(duracion-Ciclo 0)
-216
-* (duracion-Ciclo 100)
-216
-*
+225
 
-0] ;; [Error] (Intentar calcular con un símbolo en lugar de número)
+;; [Error] (Intentar calcular con un símbolo en lugar de número)
 (duracion-Ciclo 'rojo)
 
 
@@ -317,24 +332,50 @@ restarts (invokable by number or by possibly-abbreviated name):
 	;funcionamiento normal
 	;(ciclos-Por-Minuto 5)
   ; 1 ;
-	; 84
+	; 75
 
 	;caminos alternativos
 	; (ciclos-Por-Minuto 5.2)
 	; 1 ;
-	; 95.99999
+	; 87.0
 
 	;errores
 	;->(ciclos-Por-Minuto -5)
 	; -2 ;
-	; 132
+	; 150
 
 	;; Casos de prueba Requerimiento 6
 
 	; funcionamiento normal
 	; (distribucion-temporal)
-	; ((rojo 41.67) (amarillo 2.78) (verde 55.56)) 
+	; ((rojo 40.0) (rojo-intermitente 1.33) (amarillo 2.67) 
+	;(amarillo-intermitente 1.33) (verde 53.33) (verde-intermitente 1.33)) 
 
 	;errores
 	; (distribucion-temporal)
 	; ((rojo 33.333332) (amarillo 33.333332) (verde 33.333332))
+
+;; Casos de prueba Requerimiento 7 (Extensión 2)
+#|
+; [Normal] Genera el archivo con 3 transiciones
+(informe '(("2024-06-04 14:30:15" rojo amarillo)
+           ("2024-06-04 14:30:21" amarillo verde)
+           ("2024-06-04 14:30:30" verde rojo)))
+NIL
+; El archivo "informe-ejecucion-semaforo.txt" contiene:
+; Informe de Ejecución del Sistema Semafórico
+; =========================================
+; 2024-06-04 14:30:15 - Transición: ROJO → AMARILLO
+; 2024-06-04 14:30:21 - Transición: AMARILLO → VERDE
+; 2024-06-04 14:30:30 - Transición: VERDE → ROJO
+;
+;  --- Fin del Informe ---
+
+; [Alternativo] Lista vacía → solo encabezado y cierre
+(informe '())
+NIL
+
+; [Error] Datos mal formados (elemento sin los 3 campos)
+(informe '((rojo amarillo)))
+; → ERROR: Tira error al intentar (third entrada) sobre lista de 2 elementos
+|#
