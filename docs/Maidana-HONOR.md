@@ -1,9 +1,3 @@
-📜 Código de Honor y Declaración de Autoría
-(Deberá completarse individualmente por cada integrante dentro del archivo docs/HONOR.md)
-
-Como parte de nuestra formación profesional y ética académica, cada estudiante debe declarar de forma transparente el alcance y uso de herramientas de Inteligencia Artificial (ChatGPT, Claude, Copilot, etc.) en este proyecto. El uso de la IA para asistencia en sintaxis o detección de errores no está penalizado, pero la falta de transparencia o el plagio de lógica total sí.
-
-Marque con una X la opción que mejor describa su situación para cada componente del trabajo:
 👤 Integrante 1: Maidana Adrián Ezequiel - Usuario GitHub: maidaeze-gif
 
 1. Código en Common Lisp (Fase 1 y 2)
