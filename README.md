@@ -37,4 +37,4 @@ Una vez aparezca T luego de la funcion LOAD se puede ejecutar las diversas funci
 
 ## Videos
 
-- [Video conceptual del grupo](URL)
+- https://youtu.be/gBKAqd_r_lg
