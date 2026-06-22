@@ -24,21 +24,18 @@
 ;; IMPACTO: Es una funcion no destructiva
 ;; ========================================================
 
-(defun transicion (colorActual cambiarA)
-
-	(cond 
-		((and (equal colorActual 'en-rojo) (equal cambiarA 'rojo-intermitente))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
-		((and (equal colorActual 'en-rojo-intermitente) (equal cambiarA 'amarillo))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
-		((and (equal colorActual 'en-amarillo) (equal cambiarA 'amarillo-intermitente))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
-		((and (equal colorActual 'en-amarillo-intermitente) (equal cambiarA 'verde))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
-		((and (equal colorActual 'en-verde) (equal cambiarA 'verde-intermitente))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
-		((and (equal colorActual 'en-verde-intermitente) (equal cambiarA 'rojo))  (list colorActual (format nil "Cambiar-a-~a" cambiarA)))
-		(t (list colorActual 'accion-por-defecto))
-		)
-	)
+(defun transicion (color-actual cambiarA)
+  (if (or (and (eql color-actual 'en-rojo) (eql cambiarA 'rojo-intermitente))
+          (and (eql color-actual 'en-rojo-intermitente) (eql cambiarA 'amarillo))
+          (and (eql color-actual 'en-verde) (eql cambiarA 'verde-intermitente))
+          (and (eql color-actual 'en-verde-intermitente) (eql cambiarA 'rojo)))
+          (and (eql color-actual 'en-amarillo) (eql cambiarA 'amarillo-intermitente))
+          (and (eql color-actual 'en-amarillo-intermitente) (eql cambiarA 'verde))
+      (list color-actual (format nil "Cambiar-a-~a" cambiarA))
+      (list color-actual 'accion-por-defecto)))
 
 ;; ========================================================
-;; FUNCIÓN: semaforo-timer
+;; FUNCIÓN: timer
 ;; NATURALEZA: Pura (no posee efectos secundarios, devuelve el valor esperado de la funcion auxiliar a la que llama)
 ;; ESTRATEGIA: Es una funciones que prepara las variables para ser evaluadas en la funcion que se llama dentro de esta 
 ;; misma, la procedemos a clasificar como una funcion iniciadora/preparadora, utiliza funciones de orden superior (reduce y mapcar) para lograr
@@ -47,14 +44,12 @@
 ;; IMPACTO: Es una funcion no destructiva.
 ;; ========================================================
 
-(defun semaforo-timer (n)
-	(let ((duraciones '((rojo 90) (rojo-intermitente 3) (amarillo 6) (amarillo-intermitente 3) (verde 120) (verde-intermitente 3))))
-				(semaforo-timer-aux (mod n (reduce '+ (mapcar 'cadr duraciones))) duraciones)
-	)
-)
+(defun timer (n)
+	(let ((duraciones '((rojo 90) (rojo-intermitente 3) (verde 120) (verde-intermitente 3) (amarillo 6) (amarillo-intermitente 3))))
+				(timer-aux (mod n (reduce '+ (mapcar 'cadr duraciones))) duraciones)))
 
 ;; ========================================================
-;; FUNCIÓN: semaforo-timer-aux
+;; FUNCIÓN: timer-aux
 ;; NATURALEZA: Pura (Devuelve los mismos valores esperados segun las condiciones que se analizan en n
 ;; junto con el parametro lista que se le envia)
 ;; ESTRATEGIA: Recursividad de cola (la llamada recursiva es la ultima operacion) - recorre la lista de duraciones
@@ -64,23 +59,21 @@
 ;; ========================================================
 
 
-(defun semaforo-timer-aux (n duraciones)
+(defun timer-aux (n duraciones)
 		(cond 	((< n (cadar duraciones)) (caar duraciones))
-				(t (semaforo-timer-aux (- n (cadar duraciones)) (cdr duraciones)))
-				)
-	)
+				(t (timer-aux (- n (cadar duraciones)) (cdr duraciones)))))
 
 
 
 ;; ========================================================
-;; FUNCIÓN: registrarCambiosEstado 
+;; FUNCIÓN: registrar-cambios-estado 
 ;; NATURALEZA: Impura (posee efectos secundarios: imprime el cambio de estado en la terminal y consulta la hora del sistema mediante 
 ;; local-time:now de la libreria quicklisp
 ;; ESTRATEGIA: No conlleva ninguna estrategia, es una funcion simple que consulta el tiempo actual trancurrido hasta hoy desde los origenes de Lisp.
 ;; IMPACTO: Es una funcion no destructiva, brinda informacion pero no modifica ningun tipo de dato
 ;; ========================================================
 
-(defun registrarCambiosEstado (colorAnterior siguienteColor)
+(defun registrar-cambios-estado (colorAnterior siguienteColor)
 	(format t "Tiempo [~a]: la luz ha cambiado de ~a a ~a~%"
           (local-time:format-timestring 
             nil 
@@ -90,7 +83,7 @@
           colorAnterior siguienteColor))
 
 ;; ========================================================
-;; FUNCIÓN: duracion-Ciclo
+;; FUNCIÓN: duracion-ciclo
 ;; NATURALEZA: Pura realiza calculos y devuelve un valor numerico que representa el total de segundos de 1 ciclo sin importar el segundo que se le brinde.
 ;; Se podria pasar como parametero segundos mayores a 225 que corresponden a un segundo ciclo segun la duraciones del requerimento 2 e igualmente el calculo
 ;; seguiria dando la duracion de 1 ciclo
@@ -102,11 +95,10 @@
 ;; ========================================================
 
 
-(defun duracion-Ciclo(segundos)
+(defun duracion-ciclo(segundos)
 	(let ((finCiclo (buscar-Fin-Ciclo segundos)))
-			(- (buscar-Fin-Ciclo (+ finCiclo 1)) finCiclo)
-	)
-)
+			(- (buscar-Fin-Ciclo (+ finCiclo 1)) finCiclo)))
+
 ;; ========================================================
 ;; FUNCIÓN: buscar-Fin-Ciclo
 ;; NATURALEZA: Pura devuelve un valor numerico basado en la logica de la funcion timer, sirve para buscar el segundo donde termina un ciclo.
@@ -118,14 +110,10 @@
 
 (defun buscar-Fin-Ciclo(segundos)
 	(cond
-		((and (equal (semaforo-timer segundos) 'verde-intermitente) (equal (semaforo-timer (+ segundos 1)) 'rojo)) 
+		((and (equal (timer segundos) 'verde-intermitente) (equal (timer (+ segundos 1)) 'rojo)) 
 			(+ segundos 1))
-		(t (buscar-Fin-Ciclo (+ segundos 1)))
-	)
-)
+		(t (buscar-Fin-Ciclo (+ segundos 1)))))
 	
-
-
 
 ;; ========================================================
 ;; FUNCIÓN: recomendacion-Ciclo
@@ -135,50 +123,45 @@
 ;; ========================================================
 
 (defun recomendacion-Ciclo (duracion)
-
 	(cond 
 		((> duracion 150) "Ciclo demasiado largo: difícil de adaptar a la mentalidad del conductor. Se recomienda reducir las duraciones.")
 		((< duracion 35) "Ciclo demasiado corto: difícil de adaptar a la mentalidad del conductor. Se recomienda aumentar las duraciones.")
-		(t "Ciclo dentro del rango óptimo (35-150 segundos).") 
-	)
-
-)
+		(t "Ciclo dentro del rango óptimo (35-150 segundos).")))
 
 
 ;; ========================================================
-;; FUNCIÓN: ciclos-Por-Minuto
+;; FUNCIÓN: ciclos-por-tiempo
 ;; NATURALEZA: Pura, devuelve un valor numérico calculado a partir de operaciones aritméticas.
 ;; ESTRATEGIA: convierte los minutos recibidos a segundos multiplicando por 60, para luego realizar una división
-;; mediante floor entre los segundos totales y la duración del ciclo obtenida en segundos por la funcion duracion-Ciclo.
+;; mediante floor entre los segundos totales y la duración del ciclo obtenida en segundos por la funcion duracion-ciclo.
 ;; obteniendo al final la cantidad de ciclos completos en el minuto pasado por parametro.
 ;; IMPACTO: No destructivo.
 ;; ========================================================
 
-(defun ciclos-Por-Minuto (minutos)
-	(floor (* minutos 60) (duracion-Ciclo 0))
-)
+(defun ciclos-por-tiempo (minutos)
+	(floor (* minutos 60) (duracion-ciclo 0)))
 
 ;; ========================================================
-;; FUNCIÓN: contar-Color
+;; FUNCIÓN: contar-porcentaje-color
 ;; NATURALEZA: Pura (devuelve un valor numérico sin efectos secundarios).
 ;; ESTRATEGIA: Recursividad de cola con acumulador — recorre cada segundo del
-;; intervalo (segundo, fin) incrementa el acumulador cuando semaforo-timer
+;; intervalo (segundo, fin) incrementa el acumulador cuando timer
 ;; devuelve el color. La llamada recursiva es siempre la última
 ;; operación en cada rama, garantizando tail call.
 ;; IMPACTO: No destructivo.
 ;; ========================================================
 
-(defun contar-Color (color segundo fin acum)
+(defun contar-porcentaje-color (color segundo fin acum)
   (cond
     ((>= segundo fin) acum)
-    ((equal (semaforo-timer segundo) color) 
-     (contar-Color color (+ segundo 1) fin (+ acum 1)))
-    (t (contar-Color color (+ segundo 1) fin acum))))
+    ((equal (timer segundo) color) 
+     (contar-porcentaje-color color (+ segundo 1) fin (+ acum 1)))
+    (t (contar-porcentaje-color color (+ segundo 1) fin acum))))
 
 ;; ========================================================
 ;; FUNCIÓN: distribucion-Temporal
 ;; NATURALEZA: Pura — calcula porcentajes basándose únicamente en funciones
-;; puras auxiliares (semaforo-timer vía contar-Color). No produce efectos
+;; puras auxiliares (timer vía contar-porcentaje-color). No produce efectos
 ;; secundarios ni depende de estado externo.
 ;; ESTRATEGIA: Utiliza funciones de orden superior (mapcar con lambda) para
 ;; calcular declarativamente el conteo de segundos de cada color dentro de
@@ -191,12 +174,11 @@
 	(let* ((total-segundos 3600)
 		   (colores '(rojo rojo-intermitente amarillo amarillo-intermitente verde verde-intermitente))
 		   (conteos (mapcar (lambda (color)
-								(contar-color color 0 total-segundos 0))
+								(contar-porcentaje-color color 0 total-segundos 0))
 							colores)))
 		(mapcar (lambda (color conteo)
 					(list color (float (* (/ conteo total-segundos) 100))))
-				colores conteos))
-)
+				colores conteos)))
 
 ;; ========================================================
 ;; FUNCIÓN: informe
@@ -240,17 +222,17 @@
 ;;casos de prueba requerimiento 2
 
 ;;funcionamiento normal
-;;-> (semaforo-timer  90)
+;;-> (timer  90)
 
 #|ROJO-INTERMITENTE|#
 
 ;;caminos alternativos (si los hubiere) 
-;;-> (semaforo-timer  444)
+;;-> (timer  444)
 
 #|VERDE|#
 
 ;;errores
-;;-> (semaforo-timer  "54")
+;;-> (timer  "54")
 
 
 #|MOD: "54" is not a real number|#
@@ -258,21 +240,21 @@
 	;; casos de prueba requerimiento 3
 	#|
 * ; [Normal] Registra el cambio con timestamp real del sistema
-(registrarCambiosEstado 'rojo 'amarillo)
+(registrar-cambios-estado 'rojo 'amarillo)
 Tiempo 3990373261: la luz ha cambiado de ROJO a AMARILLO
 NIL
-* (registrarCambiosEstado 'amarillo 'verde)
+* (registrar-cambios-estado 'amarillo 'verde)
 Tiempo 3990373261: la luz ha cambiado de AMARILLO a VERDE
 NIL
-* (registrarCambiosEstado 'verde 'rojo)
+* (registrar-cambios-estado 'verde 'rojo)
 Tiempo 3990373263: la luz ha cambiado de VERDE a ROJO
 NIL
 * ; [Alternativo] Acepta cualquier simbolo, no valida colores
-(registrarCambiosEstado 'apagado 'rojo)
+(registrar-cambios-estado 'apagado 'rojo)
 Tiempo 3990373316: la luz ha cambiado de APAGADO a ROJO
 NIL
 * ; [Error] Sin argumentos
-(registrarCambiosEstado)
+(registrar-cambios-estado)
 
 debugger invoked on a SB-INT:SIMPLE-PROGRAM-ERROR @1000B5AF43 in thread
 #<THREAD tid=9888 "main thread" RUNNING {1100C38003}>:
@@ -285,8 +267,8 @@ restarts (invokable by number or by possibly-abbreviated name):
   1: [CALL-FORM       ] Call a different form
   2: [ABORT           ] Exit debugger, returning to top level.
 
-(REGISTRARCAMBIOSESTADO) [external]
-   source: (DEFUN REGISTRARCAMBIOSESTADO (COLORANTERIOR SIGUIENTECOLOR)
+(registrar-cambios-estado) [external]
+   source: (DEFUN registrar-cambios-estado (COLORANTERIOR SIGUIENTECOLOR)
              (LET ((EPOCH (GET-UNIVERSAL-TIME)))
                (FORMAT T "Tiempo ~a: la luz ha cambiado de ~a a ~a" EPOCH
                        COLORANTERIOR SIGUIENTECOLOR)))
@@ -298,14 +280,14 @@ restarts (invokable by number or by possibly-abbreviated name):
 
 #|
 ;;
-(duracion-Ciclo 0)
+(duracion-ciclo 0)
 225
 * ;; Esperado: 225
-(duracion-Ciclo 100)
+(duracion-ciclo 100)
 225
 
 ;; [Error] (Intentar calcular con un símbolo en lugar de número)
-(duracion-Ciclo 'rojo)
+(duracion-ciclo 'rojo)
 
 
 debugger invoked on a TYPE-ERROR @10002743C2 in thread
@@ -330,17 +312,17 @@ restarts (invokable by number or by possibly-abbreviated name):
 	;; Casos de prueba Requerimiento 5
 	 
 	;funcionamiento normal
-	;(ciclos-Por-Minuto 5)
+	;(ciclos-por-tiempo 5)
   ; 1 ;
 	; 75
 
 	;caminos alternativos
-	; (ciclos-Por-Minuto 5.2)
+	; (ciclos-por-tiempo 5.2)
 	; 1 ;
 	; 87.0
 
 	;errores
-	;->(ciclos-Por-Minuto -5)
+	;->(ciclos-por-tiempo -5)
 	; -2 ;
 	; 150
 
