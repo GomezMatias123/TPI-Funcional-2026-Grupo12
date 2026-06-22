@@ -11,6 +11,7 @@
     (load quicklisp-init)))
 
 (ql:quickload :local-time)
+#+sbcl (sb-ext:unlock-package :sb-ext)
 
 
 
@@ -28,9 +29,9 @@
   (if (or (and (eql color-actual 'en-rojo) (eql cambiarA 'rojo-intermitente))
           (and (eql color-actual 'en-rojo-intermitente) (eql cambiarA 'amarillo))
           (and (eql color-actual 'en-verde) (eql cambiarA 'verde-intermitente))
-          (and (eql color-actual 'en-verde-intermitente) (eql cambiarA 'rojo)))
+          (and (eql color-actual 'en-verde-intermitente) (eql cambiarA 'rojo))
           (and (eql color-actual 'en-amarillo) (eql cambiarA 'amarillo-intermitente))
-          (and (eql color-actual 'en-amarillo-intermitente) (eql cambiarA 'verde))
+          (and (eql color-actual 'en-amarillo-intermitente) (eql cambiarA 'verde)))
       (list color-actual (format nil "Cambiar-a-~a" cambiarA))
       (list color-actual 'accion-por-defecto)))
 
@@ -110,7 +111,8 @@
 
 (defun buscar-Fin-Ciclo(segundos)
 	(cond
-		((and (equal (timer segundos) 'verde-intermitente) (equal (timer (+ segundos 1)) 'rojo)) 
+		((and (equal (timer segundos) 'amarillo-intermitente) 
+          (equal (timer (+ segundos 1)) 'rojo)) 
 			(+ segundos 1))
 		(t (buscar-Fin-Ciclo (+ segundos 1)))))
 	
